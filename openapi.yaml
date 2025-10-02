@@ -1,0 +1,5288 @@
+openapi: 3.0.1
+info:
+  title: REST API Trails Platform
+  description: REST API used by Trails Platform
+  contact:
+    email: info@trailslight.com
+  version: 2025.10.0101
+servers:
+  - url: /api/v1
+tags:
+  - name: domains
+    description: Domain/Plant interface
+  - name: items
+    description: Item item interface
+  - name: items alarm
+    description: Item Alarm interface
+  # - name: frontend
+  #   description: frontend JSON demo interface
+  - name: sites
+    description: Sites interface
+  - name: groups
+    description: Groups/Groupsets interface
+  - name: stations
+    description: Stations interface
+paths:
+  /domains/list:
+    get:
+      tags:
+        - domains
+      summary: Return a list of all domains for a specific user
+      operationId: domainsListGET
+      responses:
+        "200":
+          description: The domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Domains"
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/stats:
+    get:
+      tags:
+        - domains
+      summary: Return a list of stats, one for each domain that contains a site that is visible to the user making the request. The stats are relative only to sites visible by the user.
+      operationId: getDomainsStats
+      responses:
+        "200":
+          description: List of Domains stats.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DomainWithStats"
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/topology:
+    get:
+      tags:
+        - domains
+      summary: Return array of domains, one for each domain that contains a site that is visible to the user making the request. If array domainIds is specified, return only selected domains.
+      operationId: getDomainsTopology
+      parameters:
+        - name: domainIds
+          in: query
+          description: The list of domain ids. Maximum 20 domain ids per request.
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minItems: 1
+              maxItems: 20
+      responses:
+        "200":
+          description: Array of domains, one for each domain that contains a site that is visible to the user making the request.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/properties:
+    get:
+      tags:
+        - domains
+      summary: Return the properties (pairs key/value) of a specific domain
+      operationId: getDomainProperties
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DomainProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/itemsWithAlarms:
+    get:
+      tags:
+        - domains
+      summary: Return number of assets in alarm state by severity, for a specific domain
+      operationId: getDomainItemsWithAlarms
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alarm severity of different items
+          # TODO define a specific type
+          content:
+            application/json:
+              schema:
+                type: object
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/alarmConfigurations:
+    get:
+      tags:
+        - domains
+      summary: Return array of alarm configurations attached to the stations that are part of the domain referenced by domain_id.
+      operationId: getDomainAlarmConfigurations
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of alarm configurations attached to the stations that are part of the domain referenced by domain_id.
+          # TODO define a specific type
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/ticketStats:
+    get:
+      tags:
+        - domains
+      summary: Return number of open and closed tickets on the domain.
+      operationId: getDomainTicketStats
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Number of open and closed tickets on the domain.
+          # TODO define a specific type
+          content:
+            application/json:
+              schema:
+                type: object
+                x-content-type: "application/json"
+
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/energyConsumption:
+    get:
+      tags:
+        - domains
+      summary: Return time serie with the energy consumption of every item capable to measure it inside the domain.
+      operationId: getDomainEnergyConsumption
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: true
+          schema:
+            $ref: "#/components/schemas/Step"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Return time series with energy consumption.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DomainEnergyConsumption"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/availableIslandsEnergy:
+    get:
+      tags:
+        - domains
+      summary: Return the number of islands with at least 90% of metrics Energy > 0, and the number of island with at least 10% of metrics Energy <= 0.
+      operationId: getDomainAvailableIslandsEnergy
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableIslandsEnergy"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/energySaving:
+    get:
+      tags:
+        - domains
+      summary: Return estimates of energy consumption with or without TAI enabled for the specific domain.
+      operationId: getDomainEnergySaving
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: false
+          schema:
+            $ref: "#/components/schemas/Step"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Return two values taiEstimate, and noTaiEstimate.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnergySaving"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/items:
+    get:
+      tags:
+        - domains
+      summary: Return a list of all items of specific domain
+      operationId: getDomainItems
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The domains items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/cabinets:
+    get:
+      tags:
+        - domains
+      summary: Return array of cabinets that are located in the domain referenced by id.
+      operationId: getDomainCabinets
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of cabinets that are located in the domain referenced by id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/noGroupItems:
+    get:
+      tags:
+        - domains
+      summary: Return array of items that are located directly (not inside groups) in the sites part of the domain referenced by id.
+      operationId: getDomainNoGroupItems
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of items that are located directly (not inside groups) in the sites part of the domain referenced by id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/groupsets:
+    get:
+      tags:
+        - domains
+      summary: Return array of group sets that are located in the domain referenced by domain_id.
+      operationId: getDomainsGroupsets
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: groupType
+          in: query
+          description: Group type of the groupset (LIGHTING, FUOTA).
+          required: true
+          schema:
+            $ref: "#/components/schemas/GroupType"
+      responses:
+        "200":
+          description: Array of group sets that are located in the domain referenced by domain_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupSet"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/groups:
+    get:
+      tags:
+        - domains
+      summary: Return groups belonging to the specified domain that are not inside any groupset.
+      operationId: getDomainsGroups
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: groupType
+          in: query
+          description: Group type (LIGHTING, FUOTA).
+          required: true
+          schema:
+            $ref: "#/components/schemas/GroupType"
+      responses:
+        "200":
+          description: Array of groups that are located in the domain referenced by id, and are not inside any group set.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/{raster_type}/{year}/{month}/{day}/{hour}/:
+    get:
+      tags:
+        - domains
+      summary: Return png containing the selected heatmap for the domain referenced by domain_id. Date is expressed in UTC.
+      operationId: getDomainsRastersYearMonthHour
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: raster_type
+          in: path
+          description: The raster type indicating the metric used for the rendering.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            $ref: "#/components/schemas/RasterType"
+        - name: year
+          in: path
+          description: Selected year (ex. 2024).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: month
+          in: path
+          description: Selected month (ex. 09).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: day
+          in: path
+          description: Selected day (ex. 03).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: hour
+          in: path
+          description: Selected hour (ex. 06).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Heatmap in png for the domain referenced by domain_id.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/{raster_type}/{year}/{month}/{day}/:
+    get:
+      tags:
+        - domains
+      summary: Return png containing the selected heatmap for the domain referenced by domain_id. Date is expressed in UTC, return daily heatmap.
+      operationId: getDomainsRastersYearMonthDay
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: raster_type
+          in: path
+          description: The raster type LIB_TRAILS_LEQ or LIB_TRAILS_VEHICLES.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            $ref: "#/components/schemas/RasterType"
+        - name: year
+          in: path
+          description: Selected year (ex. 2024).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: month
+          in: path
+          description: Selected month (ex. 09).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: day
+          in: path
+          description: Selected day (ex. 03).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Daily heatmap in png for the domain referenced by domain_id.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/{raster_type}/{year}/monthly/{month}/:
+    get:
+      tags:
+        - domains
+      summary: Return png containing the selected heatmap for the domain referenced by domain_id. Date is expressed in UTC, return monthly heatmap.
+      operationId: getDomainsRastersYearMonth
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: raster_type
+          in: path
+          description: The raster type LIB_TRAILS_LEQ, LIB_TRAILS_VEHICLES or TAI_INTENSITY_VALUE.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            $ref: "#/components/schemas/RasterType"
+        - name: year
+          in: path
+          description: Selected year (ex. 2024).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: month
+          in: path
+          description: Selected month (ex. 09).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Daily heatmap in png for the domain referenced by domain_id.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/{raster_type}/{year}/weekly/{week}/:
+    get:
+      tags:
+        - domains
+      summary: Return png containing the selected heatmap for the domain referenced by domain_id. Date is expressed in UTC, return weekly heatmap.
+      operationId: getDomainsRastersYearWeek
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: raster_type
+          in: path
+          description: The raster type LIB_TRAILS_LEQ, LIB_TRAILS_VEHICLES or TAI_INTENSITY_VALUE.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            $ref: "#/components/schemas/RasterType"
+        - name: year
+          in: path
+          description: Selected year (ex. 2024).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: week
+          in: path
+          description: Selected week number following iso format (ex. 36).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Weekly heatmap in png for the domain referenced by domain_id.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/{raster_type}/{year}/yearly/:
+    get:
+      tags:
+        - domains
+      summary: Return png containing the selected heatmap for the domain referenced by domain_id. Date is expressed in UTC, return yearly heatmap.
+      operationId: getDomainsRastersYear
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: raster_type
+          in: path
+          description: The raster type LIB_TRAILS_LEQ, LIB_TRAILS_VEHICLES or TAI_INTENSITY_VALUE.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            $ref: "#/components/schemas/RasterType"
+        - name: year
+          in: path
+          description: Selected year (ex. 2024).
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Yearly heatmap in png for the domain referenced by domain_id.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/soundStats:
+    get:
+      tags:
+        - domains
+      summary: Return the aggregate time series of sound level in dB detected from multiple groupset and groups, part of the same domain referenced by domain_id.
+      operationId: getDomainsSoundStats
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: level
+          in: query
+          description: Type of sound level.
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundLevelType"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the sound level detected from multiple groups and groupset part of the domain identified by the domain_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/energyStats:
+    get:
+      tags:
+        - domains
+      summary: Return aggregate energy consumption time series for all cabinets in the domain.
+      operationId: getDomainsEnergyStats
+      parameters:
+        - name: domain_id
+          in: path
+          description: The domain id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: The energy consumption time series
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnergyStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /items:
+    get:
+      tags:
+        - items
+      summary: Return all properties of a list of Items. Maximum 20 items per request.
+      operationId: getItems
+      parameters:
+        - name: itemIds
+          in: query
+          description: The list of item ids. Maximum 20 item ids per request.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minItems: 1
+              maxItems: 20
+      responses:
+        "200":
+          description: List of items properties.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+    post:
+      tags:
+        - items
+      summary: Create a new Item TODO
+      operationId: itemsPOST
+      requestBody:
+        description: New item's properties
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/ItemPropertyNoId"
+        required: false
+      responses:
+        "200":
+          description: The id of the new items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleResponse"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: newItems
+      x-swagger-router-controller: Items
+  /cabinets:
+    get:
+      tags:
+        - items
+      summary: Return all properties of a list of Items of type CABINET. Maximum 20 items per request.
+      operationId: getCabinets
+      parameters:
+        - name: itemIds
+          in: query
+          description: The list of item ids. Maximum 20 item ids per request.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minItems: 1
+              maxItems: 20
+      responses:
+        "200":
+          description: List of items properties.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /cabinets/{item_id}/stats:
+    get:
+      tags:
+        - items
+      summary: Return stats (number of items powered by cabinet, alarms) of the cabinet referenced by item_id.
+      operationId: getCabinetsStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the cabinet.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stats (number of items powered by cabinet, alarms) of the cabinet referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CabinetWithStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /cabinets/{item_id}/energyStats:
+    get:
+      tags:
+        - items
+      summary: Return energy measured in KWh or MWh detected by meters that are powered by the cabinet.
+      operationId: getCabinetsEnergyStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the cabinet.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Energy measured in KWh or MWh detected by meters that are powered by the cabinet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CabinetWithStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+
+
+  /domains/{domain_id}/reportUsersInfo:
+    get:
+      tags:
+        - domains
+      summary: Return array of users info required by the report microservice that can access the domain referenced by domain_id.
+      operationId: getDomainReportUsersInfo
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Return array of users info required by the report microservice that can access the domain referenced by domain_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReportUsersInfo"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+
+  /items/{item_id}/tensionStats:
+    get:
+      tags:
+        - items
+      summary: Return tension for L1, L2, L3 measured in Volts detected by meter referenced by item_id.
+      operationId: getItemsTensionStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/TensionUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Tension for L1, L2, L3 measured in Volts detected by meter referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TensionStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/frequencyStats:
+    get:
+      tags:
+        - items
+      summary: Return frequency for L1, L2, L3 measured in Hertz detected by meter referenced by item_id.
+      operationId: getItemsFrequencyStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/FrequencyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Frequency for L1, L2, L3 measured in Hertz detected by meter referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FrequencyStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/activePowerStats:
+    get:
+      tags:
+        - items
+      summary: Return active power for L1, L2, L3 measured in Watts detected by meter referenced by item_id.
+      operationId: getItemsActivePowerStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/ActivePowerUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Active power for L1, L2, L3 measured in Watts detected by meter referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivePowerStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/currentStats:
+    get:
+      tags:
+        - items
+      summary: Return current for L1, L2, L3 measured in Amps detected by meter referenced by item_id.
+      operationId: getItemsCurrentStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/CurrentUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Active power for L1, L2, L3 measured in Watts detected by meter referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/energyComponentsStats:
+    get:
+      tags:
+        - items
+      summary: Return energy components for L1, L2, L3 measured in KWh or MWh detected by meter referenced by item_id.
+      operationId: getItemsEnergyComponentsStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Time steps.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepHourDayWeekMonth"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Energy components for L1, L2, L3 measured in KWh or MWh detected by meter referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnergyComponentsStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /itemsPoweredByItem/{item_id}:
+    get:
+      tags:
+        - items
+      summary: Return all properties of a list of Items powered by a specific Item
+      operationId: getItemsPoweredByItem
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of items properties.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}:
+    get:
+      tags:
+        - items
+      summary: Return all properties of a specific Item
+      operationId: getItem
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The item details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemProperty"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+    put:
+      tags:
+        - items
+      summary: Modify a Item's property TODO
+      operationId: itemsItemIdPUT
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      requestBody:
+        description: New property
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/SingleProperty"
+        required: false
+      responses:
+        "200":
+          description: Change response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleResponse"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-codegen-request-body-name: newProperty
+      x-swagger-router-controller: Items
+    delete:
+      tags:
+        - items
+      summary: Remove a Item TODO
+      operationId: deleteItem
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The id of the deleted item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleResponse"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/trafficStats:
+    get:
+      tags:
+        - items
+      summary: Return time series of traffic volume detected from a specific item.
+      operationId: getItemsTrafficStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like current, hour or day.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the traffic detected by the item referenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrafficStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/soundStats:
+    get:
+      tags:
+        - items
+      summary: Return time series of sound level in dB detected from a specific item.
+      operationId: getItemsSoundStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps are CURRENT, HOUR, DAY, WEEK and MONTH.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: level
+          in: query
+          description: Type of sound level.
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundLevelType"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the sound levele detected by the item rferenced by item_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/soundDetectionStats:
+    get:
+      tags:
+        - items
+      summary: Return time series of sound level in dB detected from a specific item.
+      operationId: getItemsSoundDetectionStats
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps are CURRENT, HOUR, DAY, WEEK and MONTH.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: event
+          in: query
+          description: Type of detected event (RAIN, WIND, EMERGENCY).
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundEvent"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series with number of seconds in which a specific event has been detected by one of the sentinels inside the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundDetectionStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/metricNames:
+    get:
+      tags:
+        - items
+      summary: Return all metric names of specific item
+      operationId: getItemMetricNames
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of string with the list of metric names for the item referenced by item_id
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /items/{item_id}/metric/{metricSuffix}:
+    get:
+      tags:
+        - items
+      summary: Return a metric of specific item
+      operationId: getItemsMetrics
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: metricSuffix
+          in: path
+          description: The name of the metric
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/DateTime"
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Metric value
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Metric"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Items
+  /domains/{domain_id}/alarms:
+    get:
+      tags:
+        - domains
+      summary: Return a list of all the active alerts of a domain
+      operationId: getAlarms
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domain
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Current alarms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alarm"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /domains/{domain_id}/alarmsHistory:
+    get:
+      tags:
+        - domains
+      summary: Return the historical alarm's list of a specific domain 
+      operationId: getAlarmsHistory
+      parameters:
+        - name: domain_id
+          in: path
+          description: The id of the domains
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: The alarm history for the requested domain
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlarmSample"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Domains
+  /items/{item_id}/alarmsHistory:
+    get:
+      tags:
+        - items alarm
+      summary: Return the historical alarm's list of a specific Item 
+      operationId: getItemAlarmsHistory
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the Item
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: The alarm history for the requested item
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AlarmSample"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: ItemsAlarm
+  /items/{item_id}/alarms:
+    get:
+      tags:
+        - items alarm
+      summary: Return all active alarms of a item
+      operationId: getItemAlarms
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the Item for which the alarms are requested
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Current alarms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alarm"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: ItemsAlarm
+  /items/{item_id}/alarms/{alarmId}:
+    post:
+      tags:
+        - items alarm
+      summary: Ack a specific alarm TODO
+      operationId: AckItemAlarms
+      parameters:
+        - name: item_id
+          in: path
+          description: The id of the Item for which the alarms are requested
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: alarmId
+          in: path
+          description: The id of the alarm to acknowledge
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The id of acked alarm
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleResponse"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: Forbidden
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: ItemsAlarm
+  # /frontend/demo1:
+  #   get:
+  #     tags:
+  #       - frontend
+  #     summary: Return static JSON targeted at Frontend
+  #     operationId: getDemo1
+  #     responses:
+  #       "200":
+  #         description: The expected JSON
+  #       "401":
+  #         description: "Unauthorized (check token, if any)"
+  #         content: {}
+  #       "403":
+  #         description: Forbidden
+  #         content: {}
+  #       "500":
+  #         description: "Some errors occurred, check error message"
+  #         content: {}
+  #     security:
+  #       - BearerAuth: []
+  #     x-swagger-router-controller: Frontend
+  /sites/list:
+    get:
+      tags:
+        - sites
+      summary: Return a list of all sites visible to the user making the call
+      operationId: sitesListGET
+      responses:
+        "200":
+          description: List of sites
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SitesWithStats"
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Sites
+  /sites/stats:
+    get:
+      tags:
+        - sites
+      summary: Return a list of stats, one for each site visible to the user making the request.
+      operationId: getSitesStats
+      responses:
+        "200":
+          description: List of site stats.
+          content:
+            "application/json":
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SitesWithStats"
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Sites
+  /sites/aggregateStats:
+    get:
+      tags:
+        - sites
+      summary: Return aggregate stats based on a list of site ids, Maximum 20 site ids per request.
+      operationId: getSitesAggregateStats
+      parameters:
+        - name: siteIds
+          in: query
+          description: The list of site ids. Maximum 20 site ids per request.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minItems: 1
+              maxItems: 20
+      responses:
+        "200":
+          description: Aggregate stats of multiple sites
+          content:
+            "application/json":
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/SitesAggregateStats"
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Sites
+  /sites/topology:
+    get:
+      tags:
+        - sites
+      summary: Return array of sites with topology.
+      operationId: getSitesTopology
+      responses:
+        "200":
+          description: Array of sites with topology, one element for each site visible to the user making the request.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Sites
+  # /sites/{site_id}/groups:
+  #   get:
+  #     tags:
+  #       - sites
+  #     summary: Return array of groups that are located in the site referenced by site_id.
+  #     operationId: getSitesGroups
+  #     parameters:
+  #       - name: site_id
+  #         in: path
+  #         description: The id of the site.
+  #         required: true
+  #         style: simple
+  #         explode: false
+  #         schema:
+  #           type: integer
+  #     responses:
+  #       "200":
+  #         description: Array of groups that are located in the site referenced by site_id.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               type: array
+  #               items:
+  #                 $ref: "#/components/schemas/Group"
+  #               x-content-type: application/json
+  #       "401":
+  #         description: "Unauthorized (check token, if any)"
+  #         content: {}
+  #       "403":
+  #         description: "Action forbidden, check privileges"
+  #         content: {}
+  #       "500":
+  #         description: "Some errors occurred, check error message"
+  #         content: {}
+  #     security:
+  #       - BearerAuth: []
+  #     x-swagger-router-controller: Sites
+  /sites/{site_id}/groupsets:
+    get:
+      tags:
+        - sites
+      summary: Return array of group sets that are located in the site referenced by site_id.
+      operationId: getSitesGroupsets
+      parameters:
+        - name: site_id
+          in: path
+          description: The id of the site.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of group sets that are located in the site referenced by site_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupSet"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Sites
+  /sites/{site_id}/items:
+    get:
+      tags:
+        - sites
+      summary: Return array of items that are located directly (not inside groups) in the site referenced by site_id.
+      operationId: getSitesItems
+      parameters:
+        - name: site_id
+          in: path
+          description: The id of the site.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of items that are located in the site referenced by site_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Sites
+  /groups:
+    get:
+      tags:
+        - groups
+      summary: Return all properties of a list of groups. Maximum 20 groups per request.
+      operationId: getGroups
+      parameters:
+        - name: groupIds
+          in: query
+          description: The list of group ids. Maximum 20 group ids per request.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minItems: 1
+              maxItems: 20
+      responses:
+        "200":
+          description: List of groups properties.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/items:
+    get:
+      tags:
+        - groups
+      summary: Return array of items that are part of the group referenced by group_id.
+      operationId: getGroupsItems
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Array of items that are part of the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ItemProperty"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/stats:
+    get:
+      tags:
+        - groups
+      summary: Return stats (number of nodes, alarms) of the group referenced by group_id.
+      operationId: getGroupsStats
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stats (number of nodes, alarms) of the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupWithStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+
+  /groups/{group_id}/itemsWithAlarms:
+    get:
+      tags:
+        - groups
+      summary: Return number of assets in alarm state by severity, for a specific group
+      operationId: getGroupsItemsWithAlarms
+      parameters:
+        - name: group_id
+          in: path
+          description: The group id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Number of assets in alarm state by severity
+          # TODO define a specific type
+          content:
+            application/json:
+              schema:
+                type: object
+                x-content-type: "application/json"
+
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/energyConsumption:
+    get:
+      tags:
+        - groups
+      summary: Return time serie with the energy consumption of every item capable to measure it inside the group.
+      operationId: getGroupsEnergyConsumption
+      parameters:
+        - name: group_id
+          in: path
+          description: The group id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: true
+          schema:
+            $ref: "#/components/schemas/Step"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Return time series with energy consumption.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DomainEnergyConsumption"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/energySaving:
+    get:
+      tags:
+        - groups
+      summary: Return estimates of energy consumption with or without TAI enabled for the specific group.
+      operationId: getGroupsEnergySaving
+      parameters:
+        - name: group_id
+          in: path
+          description: The group id.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: false
+          schema:
+            $ref: "#/components/schemas/Step"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Return two values taiEstimate, and noTaiEstimate.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnergySaving"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/availableIslandsEnergy:
+    get:
+      tags:
+        - groups
+      summary: Return the number of islands with at least 90% of metrics Energy > 0, and the number of island with at least 10% of metrics Energy <= 0.
+      operationId: getGroupsAvailableIslandsEnergy
+      parameters:
+        - name: group_id
+          in: path
+          description: The group id.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableIslandsEnergy"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/availableIslandsEnergy:
+    get:
+      tags:
+        - groups
+      summary: Return the number of islands with at least 90% of metrics Energy > 0, and the number of island with at least 10% of metrics Energy <= 0.
+      operationId: getGroupsetsAvailableIslandsEnergy
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The groupset id.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableIslandsEnergy"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/trafficStats:
+    get:
+      tags:
+        - groups
+      summary: Return stats as a time series about traffic detected from the sentinels part of the group.
+      operationId: getGroupsTrafficStats
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Possible steps are CURRENT, HOUR and DAY.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the traffic detected by the Sentinel in the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrafficStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/soundStats:
+    get:
+      tags:
+        - groups
+      summary: Return stats as a time series about noise level detected by one of the sentinels inside the group referenced by group_id.
+      operationId: getGroupsSoundStats
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps are CURRENT, HOUR, DAY, WEEK and MONTH.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: level
+          in: query
+          description: Type of sound level.
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundLevelType"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the noise lebel detected by one of the sentinels inside the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/soundDetectionStats:
+    get:
+      tags:
+        - groups
+      summary: Return time series with number of seconds in which a specific event has been detected by one of the sentinels inside the group referenced by group_id.
+      operationId: getGroupsSoundDetectionStats
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps are CURRENT, HOUR, DAY, WEEK and MONTH.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: event
+          in: query
+          description: Type of detected event (RAIN, WIND, EMERGENCY).
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundEvent"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series with number of seconds in which a specific event has been detected by one of the sentinels inside the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundDetectionStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/taiStats:
+    get:
+      tags:
+        - groups
+      summary: Return TAI stats as time series of integers and Meteo Alert as a time series of boolean for the group referenced by group_id.
+      operationId: getGroupsTaiStats
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of TAI and meteo alert values computed inside the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaiStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/taiStatusFirstActive:
+    get:
+      tags:
+        - groups
+      summary: Return timestamp with the first activation (1) of TAI service in the group referenced by group_id.
+      operationId: getTaiStatusFirstActive
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of TAI and meteo alert values computed inside the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/taiAudit:
+    get:
+      tags:
+        - groups
+      summary: Return TAI Audit messages about the group referenced by group_id.
+      operationId: getGroupsTaiAudit
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time of the returned data.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned data.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: TAI Audit messages about the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditMessages"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groups/{group_id}/carpetPlotEnergyStats:
+    get:
+      tags:
+        - groups
+      summary: Return energy consumption stats of the group referenced by group_id. Used in the energy carpet plot.
+      operationId: getGroupsCarpetPlotEnergyStats
+      parameters:
+        - name: group_id
+          in: path
+          description: The id of the group.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: startTime
+          in: query
+          description: Start time of the returned data.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned data.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Energy consumption stats of the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/groups:
+    get:
+      tags:
+        - groups
+      summary: Return array of groups that are part of the group set referenced by groupset_id.
+      operationId: getGroupsetsGroups
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The id of the group set.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: groupType
+          in: query
+          description: Group type (LIGHTING, FUOTA).
+          required: true
+          schema:
+            $ref: "#/components/schemas/GroupType"
+      responses:
+        "200":
+          description: Array of groups that are part of the groupset referenced by groupset_id.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Group"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/stats:
+    get:
+      tags:
+        - groups
+      summary: Return stats (number of nodes, alarms) of the groupset referenced by groupset_id.
+      operationId: getGroupsetsStats
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The id of the groupset.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Stats (number of nodes, alarms) of the group referenced by groupset_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupWithStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+
+  /groupsets/{groupset_id}/itemsWithAlarms:
+    get:
+      tags:
+        - groups
+      summary: Return number of assets in alarm state by severity, for a specific groupset_id
+      operationId: getGroupsetsItemsWithAlarms
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The groupset id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Number of assets in alarm state by severity
+          # TODO define a specific type
+          content:
+            application/json:
+              schema:
+                type: object
+                x-content-type: "application/json"
+
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/energySaving:
+    get:
+      tags:
+        - groups
+      summary: Return estimates of energy consumption with or without TAI enabled for the specific groupset.
+      operationId: getGroupsetsEnergySaving
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The groupset id.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: false
+          schema:
+            $ref: "#/components/schemas/Step"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the interval.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Return two values, taiEstimate and noTaiEstimate.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EnergySaving"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/energyConsumption:
+    get:
+      tags:
+        - groups
+      summary: Return time serie with the energy consumption of every item capable to measure it inside the groupset.
+      operationId: getGroupsetsEnergyConsumption
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The groupset id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps like day, week or month
+          required: true
+          schema:
+            $ref: "#/components/schemas/Step"
+        - name: unit
+          in: query
+          description: Unit of measure.
+          required: true
+          schema:
+            $ref: "#/components/schemas/EnergyUnit"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Return time series with energy consumption.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DomainEnergyConsumption"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/trafficStats:
+    get:
+      tags:
+        - groups
+      summary: Return stats as a time series of the traffic detected from multiple groups.
+      operationId: getGroupsetsTrafficStats
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The id of the groupset.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Step can be HOUR or DAY.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepHourDayWeekMonth"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the traffic detected from multiple groups part of the groupset identified by the groupset_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrafficStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/soundStats:
+    get:
+      tags:
+        - groups
+      summary: Return the aggregate time series of sound level in dB detected from multiple groups, part of the same groupset referenced by groupset_id.
+      operationId: getGroupsetsSoundStats
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The id of the groupset.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps are CURRENT, HOUR, DAY, WEEK and MONTH.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepSoundStats"
+        - name: level
+          in: query
+          description: Type of sound level.
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundLevelType"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series of the sound level detected from multiple groups part of the groupset identified by the groupset_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets/{groupset_id}/soundDetectionStats:
+    get:
+      tags:
+        - groups
+      summary: Returns the average number of events in seconds over the groups part of the groupset.
+      operationId: getGroupsetsSoundDetectionStats
+      parameters:
+        - name: groupset_id
+          in: path
+          description: The id of the groupset.
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: integer
+        - name: step
+          in: query
+          description: Steps are CURRENT, HOUR, DAY, WEEK and MONTH.
+          required: true
+          schema:
+            $ref: "#/components/schemas/StepHourDayWeekMonth"
+        - name: event
+          in: query
+          description: Type of detected event (RAIN, WIND, EMERGENCY).
+          required: true
+          schema:
+            $ref: "#/components/schemas/SoundEvent"
+        - name: startTime
+          in: query
+          description: Start time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: endTime
+          in: query
+          description: End time of the returned time series.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date-time
+            example: 2024-07-21T17:32:28Z
+        - name: timeZone
+          in: query
+          description: Time zone of startTime and endTime as a TZ identifier (ex. Europe/Rome).
+          required: false
+          style: form
+          explode: false
+          schema:
+            $ref: "#/components/schemas/TimeZone"
+      responses:
+        "200":
+          description: Time series with number of seconds in which a specific event has been detected by one of the sentinels inside the group referenced by group_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SoundDetectionStats"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /groupsets:
+    get:
+      tags:
+        - groups
+      summary: Return all properties of a list of groupsets. Maximum 20 groupsets per request.
+      operationId: getGroupsets
+      parameters:
+        - name: groupsetIds
+          in: query
+          description: The list of groupset ids. Maximum 20 groupset ids per request.
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: integer
+              format: int64
+              minItems: 1
+              maxItems: 20
+      responses:
+        "200":
+          description: List of groupset properties.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupSet"
+                x-content-type: application/json
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Groups
+  /stations/{station_name}/alarmConfigurations:
+    post:
+      tags:
+        - stations
+      summary: Create an alarm configuration attached to the station referenced by station_name.
+      operationId: createStationAlarmConfiguration
+      requestBody:
+        description: New alarm configuration properties
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/AlarmConfiguration"
+        required: true
+      parameters:
+        - name: station_name
+          in: path
+          description: The station name
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contains uploaded alarm configuration id
+          # TODO define a specific type
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Stations
+    delete:
+      tags:
+        - stations
+      summary: Delete the alarm configuration referenced by alarm_configuration_id.
+      operationId: deleteStationAlarmConfiguration
+      parameters:
+        - name: station_name
+          in: path
+          description: The station name
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+        - name: alarm_configuration_id
+          in: query
+          description: Alarm configuration id
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alarm configuration deleted
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Stations
+    put:
+      tags:
+        - stations
+      summary: Change the alarm configuration referenced by alarm_configuration_id.
+      operationId: updateStationAlarmConfiguration
+      requestBody:
+        description: Updated alarm configuration properties
+        content:
+          "application/json":
+            schema:
+              $ref: "#/components/schemas/AlarmConfiguration"
+        required: true
+      parameters:
+        - name: station_name
+          in: path
+          description: The station name
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Alarm configuration updated
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - BearerAuth: []
+      x-swagger-router-controller: Stations
+  /alarms/webhook:
+    post:
+      tags:
+        - alarms
+      summary: Create an alarm event based on the JSON payload, called by thingsboard.
+      operationId: createAlarmEvent
+      requestBody:
+        description: Alarm event properties
+        content:
+          "application/json":
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: Alarm event created
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - ApiKeyAuth: []
+      x-swagger-router-controller: Alarms
+    put:
+      tags:
+        - alarms
+      summary: Update last alarm event based on alarm configuration id (alarm_id) on the JSON payload, called by thingsboard.
+      operationId: updateAlarmEvent
+      requestBody:
+        description: Alarm event properties
+        content:
+          "application/json":
+            schema:
+              type: object
+        required: true
+      responses:
+        "200":
+          description: Alarm event updated
+          content:
+            application/json:
+              schema:
+                type: object
+              x-content-type: "application/json"
+        "401":
+          description: "Unauthorized (check token, if any)"
+          content: {}
+        "403":
+          description: "Action forbidden, check privileges"
+          content: {}
+        "404":
+          description: "Object not available"
+          content: {}
+        "500":
+          description: "Some errors occurred, check error message"
+          content: {}
+      security:
+        - ApiKeyAuth: []
+      x-swagger-router-controller: Alarms
+components:
+  schemas:
+    UserLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        roles:
+          type: string
+        emails:
+          type: string
+      required: [username, firstName, lastName, roles, emails]
+      example:
+        emails: emails
+        firstName: firstName
+        lastName: lastName
+        roles: roles
+        username: username
+    Domains:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+      example:
+        id: 41
+        name: TRAILS_Demo 2 Wall
+        description: Demo 2 Wall
+        latitude: 44.555172
+        longitude: 11.399989
+    Sites:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+      example:
+        latitude: 6.027456183070403
+        name: Some name
+        description: Some description
+        color: blue
+        id: 234234
+        longitude: 1.4658129805029452
+    SitesWithStats:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        total_elements:
+          type: integer
+          format: int64
+        total_stations:
+          type: integer
+          format: int64
+        active_alerts:
+          type: integer
+          format: int64
+        pre_alerts:
+          type: integer
+          format: int64
+      example:
+        latitude: 6.027456183070403
+        name: Some name
+        description: Some description
+        id: 234234
+        longitude: 1.4658129805029452
+        total_elements: 99
+        total_stations: 99
+        active_alerts: 99
+        pre_alerts: 99
+    DomainWithStats:
+      type: object
+      properties:
+        domain_id:
+          type: integer
+          format: int64
+        domain_name:
+          type: string
+        description:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        severity_0:
+          type: integer
+          format: int64
+        severity_1:
+          type: integer
+          format: int64
+        severity_2:
+          type: integer
+          format: int64
+        severity_3:
+          type: integer
+          format: int64
+        severity_4:
+          type: integer
+          format: int64
+        total_elements:
+          type: integer
+          format: int64
+        total_stations:
+          type: integer
+          format: int64
+      example:
+        domain_id: 41
+        domain_name: TRAILS_Demo 2 Wall
+        description: Demo 2 Wall
+        latitude: 44.555172
+        longitude: 11.399989
+        severity_0: 0
+        severity_1: 0
+        severity_2: 0
+        severity_3: 0
+        severity_4: 0
+        total_elements: 2
+        total_stations: 1
+    GroupWithStats:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        total_nodes:
+          type: integer
+          format: int64
+        alerts:
+          type: integer
+          format: int64
+        pre_alerts:
+          type: integer
+          format: int64
+      example:
+        name: Some name
+        description: Some description
+        id: 234234
+        total_nodes: 99
+        alerts: 99
+        pre_alerts: 99
+    CabinetWithStats:
+      type: object
+      properties:
+        powered_items_count:
+          type: string
+        severity_0:
+          type: string
+        severity_1:
+          type: string
+        severity_2:
+          type: string
+        severity_3:
+          type: string
+        severity_4:
+          type: string
+    SitesAggregateStats:
+      type: object
+      properties:
+        total_elements:
+          type: integer
+          format: int64
+        total_stations:
+          type: integer
+          format: int64
+        active_alerts:
+          type: integer
+          format: int64
+        pre_alerts:
+          type: integer
+          format: int64
+      example:
+        total_elements: 99
+        total_stations: 99
+        active_alerts: 99
+        pre_alerts: 99
+    AuditMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        date:
+          type: string
+          format: date-time
+        actor:
+          type: string
+        site_id:
+          type: integer
+          format: int64
+        action:
+          type: string
+        target:
+          type: string
+        value:
+          type: string
+        json_value:
+          type: object
+      required:
+        - id
+        - date
+        - actor
+        - site_id
+        - action
+        - target
+        - value
+        - json_value
+    DomainEnergyConsumption:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/Step"
+        unit:
+          $ref: "#/components/schemas/EnergyUnit"
+        current_values:
+          $ref: "#/components/schemas/TimeSeries"
+    EnergyStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/EnergyUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeries"
+
+    ReportUsersInfo:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        email:
+          type: string
+        report_types:
+          type: array
+          items:
+            type: string
+        modules:
+          type: array
+          items:
+            type: integer
+      example:
+        user_id: "1"
+        email: user@example.com
+        report_types: ["DEFAULT"]
+        modules: [1, 2]
+
+    TensionStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/TensionUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l1:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l2:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l3:
+          $ref: "#/components/schemas/TimeSeries"
+    FrequencyStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/FrequencyUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l1:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l2:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l3:
+          $ref: "#/components/schemas/TimeSeries"
+    EnergyComponentsStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/EnergyUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l1:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l2:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l3:
+          $ref: "#/components/schemas/TimeSeries"
+    TrafficStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/TrafficUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeriesTraffic"
+    SoundStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepSoundStats"
+        level:
+          $ref: "#/components/schemas/SoundLevelType"
+        current_values:
+          $ref: "#/components/schemas/TimeSeries"
+    SoundDetectionStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepSoundStats"
+        event:
+          $ref: "#/components/schemas/SoundEvent"
+        unit:
+          $ref: "#/components/schemas/SoundDetectionUnit"
+        current_values:
+          $ref: "#/components/schemas/TimeSeries"
+    TaiStats:
+      type: object
+      properties:
+        ts:
+          $ref: "#/components/schemas/TimeSeriesTai"
+    EnergySaving:
+      type: object
+      required:
+        - unit
+        - taiEstimate
+        - noTaiEstimate
+      properties:
+        unit:
+          $ref: "#/components/schemas/EnergyUnit"
+        taiEstimate:
+          type: number
+          format: double
+        noTaiEstimate:
+          type: number
+          format: double
+        step:
+          $ref: "#/components/schemas/Step"
+        tai_ts:
+          $ref: "#/components/schemas/TimeSeries"
+        no_tai_ts:
+          $ref: "#/components/schemas/TimeSeries"
+    AvailableIslandsEnergy:
+      type: object
+      required:
+        - not_available
+        - available
+      properties:
+        not_avaliable:
+          type: number
+          description: Not available represents the number of islands with at least 10% of metrics Energy <= 0
+        available:
+          type: number
+          description: Available represents the number of islands with at least 90% of metrics Energy > 0.
+    AlarmConfiguration:
+      type: object
+      properties:
+        alarmId:
+          type: string
+        alarmName:
+          type: string
+        alarmMessage:
+          type: string
+        metric:
+          type: string
+        condition:
+          type: string
+        threshold:
+          type: number
+          format: double
+        delay:
+          type: integer
+        severity:
+          type: string
+        enabled:
+          type: boolean
+    Step:
+      type: string
+      enum:
+        - DAY
+        - WEEK
+        - MONTH
+    StepCurrentHourDay:
+      type: string
+      enum:
+        - CURRENT
+        - HOUR
+        - DAY
+    TimeZone:
+      type: string
+      enum:
+        - Europe/Rome
+        - UTC
+    StepSoundStats:
+      type: string
+      enum:
+        - CURRENT
+        - HOUR
+        - DAY
+        - WEEK
+        - MONTH
+    StepCurrentHourDayWeekMonth:
+      type: string
+      enum:
+        - CURRENT
+        - HOUR
+        - DAY
+        - WEEK
+        - MONTH
+    StepHourDayWeekMonth:
+      type: string
+      enum:
+        - HOUR
+        - DAY
+        - WEEK
+        - MONTH
+    StepDayWeek:
+      type: string
+      enum:
+        - DAY
+        - WEEK
+    RasterType:
+      type: string
+      enum:
+        - LIB_TRAILS_VEHICLES
+        - LIB_TRAILS_LEQ
+        - TAI_INTENSITY_VALUE
+        - LIB_TRAILS_RAIN
+        - LIB_TRAILS_WIND
+    StepHourDay:
+      type: string
+      enum:
+        - HOUR
+        - DAY
+    TensionUnit:
+      type: string
+      enum:
+        - V
+        - kV
+    FrequencyUnit:
+      type: string
+      enum:
+        - Hz
+        - kHz
+    EnergyUnit:
+      type: string
+      enum:
+        - MWh
+        - kWh
+    ActivePowerUnit:
+      type: string
+      enum:
+        - W
+        - kW
+        - MW
+    CurrentUnit:
+      type: string
+      enum:
+        - A
+        - kA
+    TrafficUnit:
+      type: string
+      enum:
+        - VEHICLES_HOUR
+        - VEHICLES_DAY
+        - VEHICLES_WEEK
+        - VEHICLES_MONTH
+    SoundDetectionUnit:
+      type: string
+      enum:
+        - SECONDS_10MIN
+        - SECONDS_HOUR
+        - SECONDS_DAY
+        - SECONDS_WEEK
+        - SECONDS_MONTH
+    SoundLevelType:
+      type: string
+      enum:
+        - LEQ
+        - LPEAK
+        - L90
+        - LDAY
+        - LEVENING
+        - LNIGHT
+        - LDEN
+        - THRESHOLD
+    SoundEvent:
+      type: string
+      enum:
+        - RAIN
+        - WIND
+        - EMERGENCY
+    GroupType:
+      type: string
+      enum:
+        - LIGHTING
+        - FUOTA
+    TimeSeries:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date-time
+        values:
+          type: array
+          items:
+            type: number
+            format: double
+    TimeSeriesTai:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date-time
+        tai_intensity:
+          type: array
+          items:
+            type: number
+        tai_power_percentage:
+          type: array
+          items:
+            type: number
+        tai_intensity_padding:
+          type: array
+          items:
+            type: number
+        tai_power_percentage_padding:
+          type: array
+          items:
+            type: number
+        tai_status:
+          type: array
+          items:
+            type: number
+        tai_meteo_alert:
+          type: array
+          items:
+            type: number
+    TimeSeriesInt:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date-time
+        values:
+          type: array
+          items:
+            type: number
+            format: int64
+    TimeSeriesTraffic:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date-time
+        values:
+          type: array
+          items:
+            type: number
+            format: int64
+        tai_meteo_alert:
+          type: array
+          items:
+            type: boolean
+    TimeSeriesBool:
+      type: object
+      properties:
+        time:
+          type: array
+          items:
+            type: string
+            format: date-time
+        values:
+          type: array
+          items:
+            type: boolean
+    Group:
+      type: object
+      required:
+        - id
+        - name
+        - value
+        - group_type
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        value:
+          type: string
+        group_type:
+          type: string
+        dimming_mode:
+          type: string
+          nullable: true
+        adaptive:
+          type: string
+          nullable: true
+        extra_data:
+          type: object
+          nullable: true
+    GroupSet:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        groupType:
+          type: string
+    ItemPropertyNoId:
+      type: object
+      properties:
+        siteId:
+          type: integer
+        esyncStationId:
+          type: integer
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 100
+        tagIndex:
+          type: string
+          maxLength: 8
+        type:
+          type: string
+          maxLength: 50
+        subtype:
+          type: string
+          maxLength: 50
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        showOnMap:
+          type: boolean
+    ItemProperty:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        subtype:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        census_data:
+          type: object
+          nullable: true
+        mapped_properties:
+          type: object
+          nullable: true
+      example:
+        id: 5544
+        name: Ast20
+        description: MRRO100012
+        subtype: LIGHTINGCONTROLLER_MRRO1
+        type: LIGHTINGCONTROLLER
+        latitude: 41.9190799181
+        longitude: 14.9164134264
+        census_data:
+          address: ""
+          nicename: ""
+          powered_by_item: 5506
+        mapped_properties:
+          phases: 3
+    MetricNoId:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        value:
+          type: number
+        logged:
+          type: number
+        aggregFunc:
+          type: string
+    Metric:
+      type: object
+      properties:
+        metric_name:
+          type: string
+        double_value:
+          type: number
+          nullable: true
+        string_value:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+      example:
+        metric_name: Met01Eatt
+        string_value: ciao
+        quality: long
+        timestamp: "2025-06-13T10:30:58.010000Z"
+        double_value: 6.027
+    DateTime:
+      type: string
+      format: date-time
+      example: 2024-07-21T17:32:28Z
+    AlarmSample:
+      type: object
+      properties:
+        metricPath:
+          type: string
+        name:
+          type: string
+        alarmDate:
+          type: string
+        priority:
+          type: string
+        eventType:
+          type: string
+      example:
+        name: name
+        eventType: eventType
+        metricPath: metricPath
+        priority: priority
+        alarmDate: alarmDate
+    DomainProperty:
+      type: object
+      properties:
+        name:
+          type: string
+        logo:
+          type: string
+        menuIcons:
+          type: array
+          items:
+            $ref: "#/components/schemas/MenuIcons"
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/SingleProperty"
+      example:
+        name: name
+        logo: logo
+        menuIcons:
+          - iconLink: iconLink
+            pageName: pageName
+          - iconLink: iconLink
+            pageName: pageName
+        properties:
+          - val: val
+            prop: prop
+          - val: val
+            prop: prop
+    SingleProperty:
+      type: object
+      properties:
+        prop:
+          type: string
+        val:
+          type: string
+      example:
+        val: val
+        prop: prop
+    MenuIcons:
+      type: object
+      properties:
+        iconLink:
+          type: string
+        pageName:
+          type: string
+      example:
+        iconLink: iconLink
+        pageName: pageName
+    Alarm:
+      type: object
+      properties:
+        alarmId:
+          type: integer
+        alarm_configuration_id:
+          type: string
+        eventId:
+          type: string
+        alarmName:
+          type: string
+        alarmDescription:
+          type: string
+        itemId:
+          type: integer
+        metricName:
+          type: string
+        severity:
+          type: integer
+        alarmStartTime:
+          type: string
+          format: date-time
+        value:
+          type: number
+          nullable: true
+    ItemId:
+      type: object
+      properties:
+        id:
+          type: integer
+    AccessToken:
+      type: object
+      properties:
+        accessToken:
+          type: string
+      example:
+        accessToken: accessToken
+    SimpleResponse:
+      type: object
+      properties:
+        response:
+          type: string
+      example:
+        response: response
+    ActivePowerStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/ActivePowerUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l1:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l2:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l3:
+          $ref: "#/components/schemas/TimeSeries"
+    CurrentStats:
+      type: object
+      properties:
+        step:
+          $ref: "#/components/schemas/StepCurrentHourDayWeekMonth"
+        unit:
+          $ref: "#/components/schemas/CurrentUnit"
+        ts:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l1:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l2:
+          $ref: "#/components/schemas/TimeSeries"
+        ts_l3:
+          $ref: "#/components/schemas/TimeSeries"
+  securitySchemes:
+    BearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # optional, arbitrary value for documentation purposes
+    ApiKeyAuth: # arbitrary name for the security scheme
+      type: apiKey
+      in: header # can be "header", "query" or "cookie"
+      name: X-API-KEY # name of the header, query parameter or cookie
